@@ -17,16 +17,19 @@ public class LockPick : MonoBehaviour {
     [SerializeField]
     private string m_pickTrigger = "Pick";
 
+    private int m_currentPin = 0;
     private int m_nextPin = 0;
     private bool m_isPicking = false;
     private bool m_pickAtNextPin = false;
     private bool m_isMovingForward = true;
 
     private Animator m_pickAnimator;
+    private LockController m_controller;
 
 	void Start ()
     {
         m_pickAnimator = m_pick.GetComponentInChildren<Animator>();
+        m_controller = GetComponentInParent<LockController>();
 
         for(int i = 0; i < m_pinReferences.Length; i++)
         {
@@ -40,11 +43,11 @@ public class LockPick : MonoBehaviour {
 
 	void Update ()
     {
-        if(Input.GetKeyDown(KeyCode.Space))
+        if (Input.GetKeyDown(KeyCode.Space))
         {
-            if(!m_isPicking)
+            if (!m_isPicking)
             {
-                m_pickAtNextPin = true;
+                Pick();
             }
         }
 
@@ -60,10 +63,14 @@ public class LockPick : MonoBehaviour {
 
             if(Vector3.Distance(m_pick.transform.position, m_pinPositions[m_nextPin].position) < m_minDistance)
             {
-                if(m_pickAtNextPin)
+                m_currentPin = m_nextPin;
+     
+                if (m_pickAtNextPin)
                 {
                     m_isPicking = true;
                     m_pickAnimator.SetTrigger(m_pickTrigger);
+                    //Debug.Log(m_currentPin);
+                    m_controller.Pick();
                 }
 
                 if (m_isMovingForward)
@@ -86,6 +93,19 @@ public class LockPick : MonoBehaviour {
                 }
             }
         }
+    }
+
+    public void Pick()
+    {
+        if (!m_isPicking)
+        {
+            m_pickAtNextPin = true;
+        }
+    }
+
+    public int GetCurrentPin()
+    {
+        return m_currentPin;
     }
 
     public void SetLockPickingToFalse()
