@@ -2,30 +2,62 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class LockController : MonoBehaviour {
-
+public class LockController : ActivatorObject
+{
+    [SerializeField]
+    private PinColour[] m_pinColours;
+    [SerializeField]
+    private bool[] m_isSmoke;
+    [SerializeField]
+    private ParticleSystem[] m_smokeObjects;
     [SerializeField]
     private LockPin[] m_pins;
 
-    [SerializeField]
-    private PinColour[] m_pinColours;
-
-    [SerializeField]
-    private LockPick m_lockPick;
-
     private bool m_hasChangedPins = false;
     private bool[] m_changedPins;
+    private bool m_isComplete = false;
+    private int m_lastBump = -1;
 
+    private LockPick m_lockPick;
     private Coroutine m_wTrCoroutine;
 
     void Start()
     {
+        m_lockPick = GetComponentInChildren<LockPick>();
+
         for(int i = 0; i < m_pins.Length; i++)
         {
             m_pins[i].SetPinColour(m_pinColours[i]);
+            if(m_isSmoke[i])
+            {
+                m_smokeObjects[i].Play();
+            }
         }
 
         m_changedPins = new bool[m_pins.Length];
+    }
+
+    void Update()
+    {
+        CheckForCompletion();
+    }
+
+    private void CheckForCompletion()
+    {
+        foreach(LockPin p in m_pins)
+        {
+            if(p.IsPressed())
+            {
+                base.Activate();
+                m_isComplete = true;
+                break;
+            }
+        }
+    }
+
+    public bool IsComplete()
+    {
+        return m_isComplete;
     }
 
     public void Pick()
@@ -44,7 +76,6 @@ public class LockController : MonoBehaviour {
                 m_changedPins[i] = true;
             }
         }
-
         if(m_hasChangedPins)
         {
             if(m_wTrCoroutine != null)
@@ -58,13 +89,23 @@ public class LockController : MonoBehaviour {
     private IEnumerator WhiteToRed()
     {
         yield return new WaitForSeconds(3.0f);
-
-        for(int i = 0; i < m_changedPins.Length; i++)
+        if (!m_isComplete)
         {
-            if(m_changedPins[i] == true)
+            for (int i = 0; i < m_changedPins.Length; i++)
             {
-                m_pins[i].SetPinColour(PinColour.Red);
+                if (m_changedPins[i] == true)
+                {
+                    m_pins[i].SetPinColour(PinColour.Red);
+                }
             }
         }
+    }
+
+    public void Bump(int pinIndex)
+    {
+        if(m_lastBump != pinIndex)
+            m_pins[pinIndex].Spark();
+
+        m_lastBump = pinIndex;
     }
 }

@@ -11,6 +11,8 @@ public class LockPick : MonoBehaviour {
     [SerializeField]
     private Transform[] m_pinPositions;
     [SerializeField]
+    private Transform m_outPosition;
+    [SerializeField]
     private float m_lockPickSpeed = 1.0f;
     [SerializeField]
     private float m_minDistance = 1.0f;
@@ -43,15 +45,33 @@ public class LockPick : MonoBehaviour {
 
 	void Update ()
     {
-        if (Input.GetKeyDown(KeyCode.Space))
+        if (!m_controller.IsComplete())
+        {
+            if (Input.GetKeyDown(KeyCode.Space))
+            {
+                if (!m_isPicking)
+                {
+                    Pick();
+                }
+            }
+
+            MoveLockPick();
+        }
+        else
         {
             if (!m_isPicking)
             {
-                Pick();
+                m_pick.transform.position = Vector3.Lerp(m_pick.transform.position, m_outPosition.position, m_lockPickSpeed * 0.5f * Time.deltaTime);
             }
         }
+    }
 
-        MoveLockPick();
+    private void Pick()
+    {
+        if (!m_isPicking)
+        {
+            m_pickAtNextPin = true;
+        }
     }
 
     private void MoveLockPick()
@@ -63,8 +83,9 @@ public class LockPick : MonoBehaviour {
 
             if(Vector3.Distance(m_pick.transform.position, m_pinPositions[m_nextPin].position) < m_minDistance)
             {
+                m_controller.Bump(m_currentPin);
                 m_currentPin = m_nextPin;
-     
+
                 if (m_pickAtNextPin)
                 {
                     m_isPicking = true;
@@ -92,14 +113,6 @@ public class LockPick : MonoBehaviour {
                     }
                 }
             }
-        }
-    }
-
-    public void Pick()
-    {
-        if (!m_isPicking)
-        {
-            m_pickAtNextPin = true;
         }
     }
 
