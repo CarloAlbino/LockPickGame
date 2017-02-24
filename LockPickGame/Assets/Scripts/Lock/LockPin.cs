@@ -13,7 +13,7 @@ public enum PinColour
 public class LockPin : MonoBehaviour {
 
     [SerializeField]
-    private Color[] m_colours = { Color.white, Color.red, Color.blue };
+    private Material[] m_materials;
     [SerializeField]
     private string m_pickTrigger = "Pick";
     [SerializeField]
@@ -24,16 +24,14 @@ public class LockPin : MonoBehaviour {
     private MeshRenderer m_renderer;
 
     private PinColour m_currentColour = PinColour.White;
-    private Material m_material;
     [SerializeField]
     private Animator m_animator;
 
+    private LockController m_controller;
+
     void Start()
     {
-        if (m_renderer != null)
-        {
-            m_material = m_renderer.GetComponent<Material>();
-        }
+        m_controller = GetComponentInParent<LockController>();
         m_animator = GetComponent<Animator>();
     }
 
@@ -45,7 +43,20 @@ public class LockPin : MonoBehaviour {
     public void SetPinColour(PinColour newColour)
     {
         m_currentColour = newColour;
-        m_material.color = m_colours[(int)m_currentColour];
+
+        switch (m_currentColour)
+        {
+            case PinColour.White:
+                m_renderer.material = m_materials[0];
+                break;
+            case PinColour.Red:
+                m_renderer.material = m_materials[1];
+                break;
+            case PinColour.Blue:
+                m_renderer.material = m_materials[2];
+                break;
+        }
+
     }
 
     public void Pick()
@@ -60,6 +71,7 @@ public class LockPin : MonoBehaviour {
                 break;
             case PinColour.Blue:
                 m_animator.SetBool(m_blueBool, true);
+                m_controller.SetRedToWhite();
                 break;
         }
         m_animator.SetTrigger(m_pickTrigger);
