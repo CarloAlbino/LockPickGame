@@ -126,4 +126,9 @@ public class LockPick : MonoBehaviour {
         m_isPicking = false;
         m_pickAtNextPin = false;
     }
+
+    public void SetPickSpeed(float speed)
+    {
+        m_lockPickSpeed = speed;
+    }
 }

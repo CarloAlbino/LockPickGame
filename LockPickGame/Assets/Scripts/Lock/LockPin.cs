@@ -106,4 +106,28 @@ public class LockPin : MonoBehaviour {
             m_particleObject.GetComponent<ParticleSystem>().Play();
         }
     }
+
+    public bool Win()
+    {
+        if(m_isPressed && m_currentColour == PinColour.White)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    public bool Lose()
+    {
+        if (m_isPressed && m_currentColour == PinColour.Red)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
 }

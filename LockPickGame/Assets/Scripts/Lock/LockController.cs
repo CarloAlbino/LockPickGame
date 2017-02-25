@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class LockController : ActivatorObject
+public class LockController : MonoBehaviour
 {
     [SerializeField]
     private PinColour[] m_pinColours;
@@ -17,6 +17,7 @@ public class LockController : ActivatorObject
     private bool[] m_changedPins;
     private bool m_isComplete = false;
     private int m_lastBump = -1;
+    private float m_pickSpeed;
 
     private LockPick m_lockPick;
     private Coroutine m_wTrCoroutine;
@@ -24,8 +25,9 @@ public class LockController : ActivatorObject
     void Start()
     {
         m_lockPick = GetComponentInChildren<LockPick>();
+        m_lockPick.SetPickSpeed(m_pickSpeed);
 
-        for(int i = 0; i < m_pins.Length; i++)
+        for (int i = 0; i < m_pins.Length; i++)
         {
             m_pins[i].SetPinColour(m_pinColours[i]);
             if(m_isSmoke[i])
@@ -46,11 +48,18 @@ public class LockController : ActivatorObject
     {
         foreach(LockPin p in m_pins)
         {
-            if(p.IsPressed())
+            if(p.Win())
             {
-                base.Activate();
+                // Unlock lock
+                LockSceneController.Instance.Win();
                 m_isComplete = true;
-                break;
+            }
+
+            if(p.Lose())
+            {
+                // Did not unlock lock
+                LockSceneController.Instance.Lose();
+                m_isComplete = true;
             }
         }
     }
@@ -108,4 +117,12 @@ public class LockController : ActivatorObject
 
         m_lastBump = pinIndex;
     }
+
+    public void SetLockColours(PinColour[] pinColours, bool[] isSmoke, float speed)
+    {
+        m_pinColours = pinColours;
+        m_isSmoke = isSmoke;
+        m_pickSpeed = speed;
+    }
+
 }
