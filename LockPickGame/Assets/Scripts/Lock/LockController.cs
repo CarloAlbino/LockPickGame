@@ -20,46 +20,63 @@ public class LockController : MonoBehaviour
     private float m_pickSpeed;
 
     private LockPick m_lockPick;
+    private GameObject m_lockCamera;
+    private InGameLock m_lastInGameLock;
     private Coroutine m_wTrCoroutine;
+
+    // Opening cutscene
+    [SerializeField]
+    private Transform m_startPos;
+    [SerializeField]
+    private Transform m_endPos;
+    [SerializeField]
+    private float m_cameraSpeed;
+    private bool m_canMove = false;
 
     void Start()
     {
         m_lockPick = GetComponentInChildren<LockPick>();
-        m_lockPick.SetPickSpeed(m_pickSpeed);
-
-        for (int i = 0; i < m_pins.Length; i++)
-        {
-            m_pins[i].SetPinColour(m_pinColours[i]);
-            if(m_isSmoke[i])
-            {
-                m_smokeObjects[i].Play();
-            }
-        }
-
-        m_changedPins = new bool[m_pins.Length];
+        m_lockCamera = GetComponentInChildren<Camera>().gameObject;
+        m_lockCamera.SetActive(false);
     }
 
     void Update()
     {
         CheckForCompletion();
+
+        if(m_canMove)
+        {
+            Vector3 newPos = Vector3.Lerp(m_lockCamera.transform.position, m_endPos.position, m_cameraSpeed * Time.deltaTime);
+            Quaternion newRot = Quaternion.Lerp(m_lockCamera.transform.rotation, m_endPos.rotation, m_cameraSpeed * Time.deltaTime);
+            m_lockCamera.transform.position = newPos;
+            m_lockCamera.transform.rotation = newRot;
+
+            if(Vector3.Distance(m_lockCamera.transform.position, m_endPos.position) < Mathf.Epsilon)
+            {
+                m_canMove = false;
+            }
+        }
     }
 
     private void CheckForCompletion()
     {
-        foreach(LockPin p in m_pins)
+        if (m_lastInGameLock != null)
         {
-            if(p.Win())
+            foreach (LockPin p in m_pins)
             {
-                // Unlock lock
-                LockSceneController.Instance.Win();
-                m_isComplete = true;
-            }
+                if (p.Win())
+                {
+                    // Unlock lock
+                    m_lastInGameLock.UnlockedLock();
+                    EndLockPickMode();
+                }
 
-            if(p.Lose())
-            {
-                // Did not unlock lock
-                LockSceneController.Instance.Lose();
-                m_isComplete = true;
+                if (p.Lose())
+                {
+                    // Did not unlock lock
+                    m_lastInGameLock.FailedLock();
+                    EndLockPickMode();
+                }
             }
         }
     }
@@ -118,11 +135,41 @@ public class LockController : MonoBehaviour
         m_lastBump = pinIndex;
     }
 
-    public void SetLockColours(PinColour[] pinColours, bool[] isSmoke, float speed)
+    public void StartLockPicking(PinColour[] pinColours, bool[] isSmoke, float speed, InGameLock lastLock)
     {
+        m_lastInGameLock = lastLock;
+
         m_pinColours = pinColours;
         m_isSmoke = isSmoke;
         m_pickSpeed = speed;
+
+        m_lockPick.SetPickSpeed(m_pickSpeed);
+
+        for (int i = 0; i < m_pins.Length; i++)
+        {
+            m_pins[i].SetPinColour(m_pinColours[i]);
+            if (m_isSmoke[i])
+            {
+                m_smokeObjects[i].Play();
+            }
+        }
+
+        m_changedPins = new bool[m_pins.Length];
+
+        // Show lock
+        m_lockCamera.transform.position = m_startPos.position;
+        m_lockCamera.transform.rotation = m_startPos.rotation;
+        m_lockCamera.SetActive(true);
+        m_canMove = true;
     }
 
+    private void EndLockPickMode()
+    {
+        m_lockCamera.SetActive(false);
+        m_isComplete = true;
+        foreach (LockPin pin in m_pins)
+        {
+            pin.ResetPin();
+        }
+    }
 }

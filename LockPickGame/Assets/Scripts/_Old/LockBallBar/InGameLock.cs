@@ -5,41 +5,56 @@ using UnityEngine;
 public class InGameLock : ActivatorObject {
 
     [SerializeField]
-    private int m_lockID;
-    [SerializeField]
-    private Transform m_lastPlayerPos;
-    [SerializeField]
     private PinColour[] m_pinColours;
     [SerializeField]
     private bool[] m_isSmoke;
     [SerializeField]
     private float m_pickSpeed = 1.0f;
 
-    private bool m_isUnlocked = false;
+    private bool m_isLocked = false;
 
-    void Update()
+    private LockController m_lock;
+    private PlayerRaycast m_player;
+
+    void Start()
     {
-        if(!m_isUnlocked)
+        m_lock = FindObjectOfType<LockController>();
+    }
+
+    public void GoToLock(PlayerRaycast player)
+    {
+        Debug.Log("Called");
+        if (!m_isLocked)
         {
-            if(InGameLockController.Instance.GetLockState(m_lockID))
-            {
-                m_isUnlocked = true;
-                GoToLock();
-            }
+            m_player = player;
+            player.FreezePlayer();
+            m_lock.StartLockPicking(m_pinColours, m_isSmoke, m_pickSpeed, this);
         }
     }
 
-    public void GoToLock()
+    public void FailedLock()
     {
-        if (!m_isUnlocked)
-        {
-            LockSceneController.Instance.SetLock(m_pinColours, m_isSmoke, m_pickSpeed);
-            LockSceneController.Instance.GoToLock(m_lockID, m_lastPlayerPos);
-        }
+        StartCoroutine(WaitForFail());
     }
 
-    public int GetID()
+    private IEnumerator WaitForFail()
     {
-        return m_lockID;
+        yield return new WaitForSeconds(2);
+        m_player.UnfreezePlayer();
+        m_isLocked = true;
     }
+
+    public void UnlockedLock()
+    {
+        StartCoroutine(WaitForUnlock());
+    }
+
+    private IEnumerator WaitForUnlock()
+    {
+        yield return new WaitForSeconds(2);
+        m_player.UnfreezePlayer();
+        Activate();
+        m_isLocked = false;
+    }
+
 }

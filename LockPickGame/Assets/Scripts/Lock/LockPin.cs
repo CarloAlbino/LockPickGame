@@ -51,7 +51,7 @@ public class LockPin : MonoBehaviour {
                 m_isPressed = true;
                 break;
             case PinColour.Red:
-
+                m_isPressed = true;
                 break;
             case PinColour.Blue:
                 m_animator.SetBool(m_blueBool, true);
@@ -64,6 +64,11 @@ public class LockPin : MonoBehaviour {
     public bool IsPressed()
     {
         return m_isPressed;
+    }
+
+    public void ResetPin()
+    {
+        m_isPressed = false;
     }
 
     public PinColour GetPinColour()

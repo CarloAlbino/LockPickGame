@@ -1,6 +1,8 @@
 Shader "Hidden/Sepiatone Effect" {
 Properties {
 	_MainTex ("Base (RGB)", 2D) = "white" {}
+	_Color("Sepia Color", Color) = (0.191, -0.054, -0.221, 0.0)
+	_sepBlendSpeed("Blend Speed", Range(0, 10)) = 10
 }
 
 SubShader {
@@ -13,6 +15,8 @@ CGPROGRAM
 #include "UnityCG.cginc"
 
 uniform sampler2D _MainTex;
+uniform float4 _Color;
+uniform float _sepBlendSpeed;
 half4 _MainTex_ST;
 
 fixed4 frag (v2f_img i) : SV_Target
@@ -23,8 +27,17 @@ fixed4 frag (v2f_img i) : SV_Target
 	fixed Y = dot (fixed3(0.299, 0.587, 0.114), original.rgb);
 
 	// Convert to Sepia Tone by adding constant
-	fixed4 sepiaConvert = float4 (0.191, -0.054, -0.221, 0.0);
-	fixed4 output = sepiaConvert + Y;
+	//fixed4 sepiaConvert = float4 (0.191, -0.054, -0.221, 0.0);
+
+	float4 c = tex2D(_MainTex, i.uv);
+
+	float lum = c.r*_Color.r + c.g*_Color.g + c.b*_Color.b;
+	float3 sep = float3(lum, lum, lum);
+
+	float4 result = c;
+	result.rgb = lerp(c.rgb, sep, _sepBlendSpeed);
+
+	fixed4 output = result + Y;
 	output.a = original.a;
 	
 	return output;
