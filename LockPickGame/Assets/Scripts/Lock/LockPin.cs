@@ -36,11 +36,13 @@ public class LockPin : MonoBehaviour {
     private MeshRenderer m_renderer;
     private Animator m_animator;
     private LockController m_controller;
+    private AudioSource m_audio;
 
     void Start()
     {
         m_controller = GetComponentInParent<LockController>();
         m_animator = GetComponent<Animator>();
+        m_audio = GetComponent<AudioSource>();
     }
 
     public void Pick()
@@ -66,9 +68,18 @@ public class LockPin : MonoBehaviour {
         return m_isPressed;
     }
 
-    public void ResetPin()
+    public void ResetPin(bool isWin)
     {
         m_isPressed = false;
+        m_animator.SetBool(m_blueBool, true);
+        if (isWin)
+        {
+            SetPinColour(PinColour.White);
+        }
+        else
+        {
+            SetPinColour(PinColour.Red);
+        }
     }
 
     public PinColour GetPinColour()
@@ -109,6 +120,7 @@ public class LockPin : MonoBehaviour {
         {
             m_animator.SetTrigger(m_bumpTrigger);
             m_particleObject.GetComponent<ParticleSystem>().Play();
+            m_audio.Play();
         }
     }
 

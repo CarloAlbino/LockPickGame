@@ -24,6 +24,7 @@ public class LockPick : MonoBehaviour {
     private bool m_isPicking = false;
     private bool m_pickAtNextPin = false;
     private bool m_isMovingForward = true;
+    private bool m_isRandomizedDir = false;
 
     private Animator m_pickAnimator;
     private LockController m_controller;
@@ -45,7 +46,7 @@ public class LockPick : MonoBehaviour {
 
 	void Update ()
     {
-        if (!m_controller.IsComplete())
+        if (m_controller.CanPick())
         {
             if (Input.GetKeyDown(KeyCode.Space))
             {
@@ -102,6 +103,7 @@ public class LockPick : MonoBehaviour {
                         m_isMovingForward = false;
                         m_nextPin--;
                     }
+                    RandomizeDirection();
                 }
                 else
                 {
@@ -111,6 +113,7 @@ public class LockPick : MonoBehaviour {
                         m_isMovingForward = true;
                         m_nextPin++;
                     }
+                    RandomizeDirection();
                 }
             }
         }
@@ -130,5 +133,22 @@ public class LockPick : MonoBehaviour {
     public void SetPickSpeed(float speed)
     {
         m_lockPickSpeed = speed;
+    }
+
+    public void SetRandomizedDirections(bool b)
+    {
+        m_isRandomizedDir = b;
+    }
+
+    public void RandomizeDirection()
+    {
+        if(m_isRandomizedDir)
+        {
+            int random = Random.Range(0, 10);
+            if(random < 3)
+            {
+                m_isMovingForward = !m_isMovingForward;
+            }
+        }
     }
 }
